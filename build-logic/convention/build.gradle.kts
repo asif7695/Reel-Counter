@@ -50,6 +50,10 @@ gradlePlugin {
             id = "reelcounter.android.library.compose"
             implementationClass = "AndroidLibraryComposeConventionPlugin"
         }
+        register("androidSecrets") {
+            id = "reelcounter.android.secrets"
+            implementationClass = "AndroidSecretsConventionPlugin"
+        }
         register("androidFeature") {
             id = "reelcounter.android.feature"
             implementationClass = "AndroidFeatureConventionPlugin"

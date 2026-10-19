@@ -6,6 +6,8 @@ import androidx.navigation.compose.NavHost
 import com.reelcounter.app.ui.ReelCounterAppState
 import com.reelcounter.feature.friends.navigation.friendsScreen
 import com.reelcounter.feature.insights.navigation.insightsScreen
+import com.reelcounter.feature.profile.navigation.editProfileScreen
+import com.reelcounter.feature.profile.navigation.navigateToEditProfile
 import com.reelcounter.feature.settings.navigation.navigateToHowWeCount
 import com.reelcounter.feature.settings.navigation.settingsGraph
 import com.reelcounter.feature.today.navigation.TodayRoute
@@ -30,8 +32,12 @@ fun ReelCounterNavHost(
         insightsScreen()
         friendsScreen()
         settingsGraph(
+            onEditProfileClick = { navController.navigateToEditProfile() },
             onHowWeCountClick = { navController.navigateToHowWeCount() },
             onBackClick = { navController.popBackStack() },
+            nestedGraphs = {
+                editProfileScreen(onBackClick = { navController.popBackStack() })
+            },
         )
     }
 }

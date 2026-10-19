@@ -18,6 +18,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
 
             dependencies {
                 "implementation"(project(":core:designsystem"))
+                "implementation"(project(":core:domain"))
                 "implementation"(project(":core:ui"))
 
                 "implementation"(libs.findLibrary("androidx-hilt-lifecycle-viewModelCompose").get())
@@ -27,6 +28,8 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 "implementation"(libs.findLibrary("kotlinx-serialization-json").get())
 
                 "debugImplementation"(project(":core:preview"))
+
+                "testImplementation"(project(":core:testing"))
             }
         }
     }

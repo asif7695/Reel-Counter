@@ -18,6 +18,13 @@ secrets.properties
 *.jks
 google-services.json
 
+# Node (SQL test harness)
+node_modules/
+
+# Supabase CLI local state
+supabase/.branches/
+supabase/.temp/
+
 # OS
 .DS_Store
 Thumbs.db

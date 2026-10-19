@@ -25,16 +25,23 @@ fun NavController.navigateToSettings(navOptions: NavOptions? = null) =
 fun NavController.navigateToHowWeCount(navOptions: NavOptions? = null) =
     navigate(route = HowWeCountRoute, navOptions = navOptions)
 
+/**
+ * @param nestedGraphs destinations from other features that belong under this tab (e.g. Edit
+ * profile), added by the app so this feature doesn't depend on them.
+ */
 fun NavGraphBuilder.settingsGraph(
+    onEditProfileClick: () -> Unit,
     onHowWeCountClick: () -> Unit,
     onBackClick: () -> Unit,
+    nestedGraphs: NavGraphBuilder.() -> Unit = {},
 ) {
     navigation<SettingsGraph>(startDestination = SettingsRoute) {
         composable<SettingsRoute> {
-            SettingsScreen(onHowWeCountClick = onHowWeCountClick)
+            SettingsScreen(onEditProfileClick = onEditProfileClick, onHowWeCountClick = onHowWeCountClick)
         }
         composable<HowWeCountRoute> {
             HowWeCountScreen(onBackClick = onBackClick)
         }
+        nestedGraphs()
     }
 }

@@ -11,5 +11,8 @@ dependencies {
     api(projects.core.designsystem)
     api(projects.core.model)
 
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
     debugImplementation(projects.core.preview)
 }

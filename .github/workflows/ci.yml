@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  android:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -23,12 +23,15 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      # No secrets.properties in CI: the build uses the committed placeholders, and the app
+      # shows "backend not configured". Real keys are never needed to build or test.
       - name: Build, unit test and lint
         run: >
           ./gradlew
           assembleDebug
           testDebugUnitTest
           :core:model:test
+          :core:domain:test
           :app:lintDebug
           -PwarningsAsErrors=true
           --stacktrace
@@ -40,3 +43,23 @@ jobs:
           name: lint-report
           path: app/build/reports/lint-results-debug.*
           if-no-files-found: ignore
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: supabase/tests/pglite
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: supabase/tests/pglite/package-lock.json
+
+      - run: npm ci
+
+      # Applies every migration to PGlite and checks constraints and RLS as real API roles.
+      - run: npm test

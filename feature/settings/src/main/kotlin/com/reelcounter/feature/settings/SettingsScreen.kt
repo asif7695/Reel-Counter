@@ -12,21 +12,53 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.reelcounter.core.designsystem.component.RcAlertDialog
 import com.reelcounter.core.designsystem.component.RcTopAppBar
 import com.reelcounter.core.designsystem.icon.RcIcons
 import com.reelcounter.core.designsystem.theme.Spacing
+import com.reelcounter.core.model.UserProfile
+import com.reelcounter.core.ui.profile.Avatar
 
-// Account, privacy, tracking and data controls join this list in Phases 3, 4 and 8.
 @Composable
 internal fun SettingsScreen(
+    onEditProfileClick: () -> Unit,
     onHowWeCountClick: () -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
+    val profile by viewModel.profile.collectAsStateWithLifecycle()
+    SettingsScreen(
+        profile = profile,
+        onEditProfileClick = onEditProfileClick,
+        onHowWeCountClick = onHowWeCountClick,
+        onSignOut = viewModel::signOut,
+        modifier = modifier,
+    )
+}
+
+// Privacy, tracking and data controls join this list in Phases 4 and 8.
+@Composable
+internal fun SettingsScreen(
+    profile: UserProfile?,
+    onEditProfileClick: () -> Unit,
+    onHowWeCountClick: () -> Unit,
+    onSignOut: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var confirmSignOut by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier,
         topBar = { RcTopAppBar(title = stringResource(R.string.feature_settings_title)) },
@@ -36,17 +68,84 @@ internal fun SettingsScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
         ) {
+            if (profile != null) {
+                AccountHeader(profile = profile, onClick = onEditProfileClick)
+            }
+
             SectionHeader(text = stringResource(R.string.feature_settings_section_about_numbers))
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.feature_settings_how_we_count)) },
-                supportingContent = { Text(stringResource(R.string.feature_settings_how_we_count_summary)) },
-                leadingContent = { Icon(imageVector = RcIcons.Info, contentDescription = null) },
-                trailingContent = { Icon(imageVector = RcIcons.ChevronForward, contentDescription = null) },
-                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.clickable(role = Role.Button, onClick = onHowWeCountClick),
+            SettingsRow(
+                title = stringResource(R.string.feature_settings_how_we_count),
+                summary = stringResource(R.string.feature_settings_how_we_count_summary),
+                leading = { Icon(imageVector = RcIcons.Info, contentDescription = null) },
+                onClick = onHowWeCountClick,
+            )
+
+            SectionHeader(text = stringResource(R.string.feature_settings_section_account))
+            SettingsRow(
+                title = stringResource(R.string.feature_settings_sign_out),
+                leading = { Icon(imageVector = RcIcons.SignOut, contentDescription = null) },
+                showChevron = false,
+                onClick = { confirmSignOut = true },
             )
         }
     }
+
+    if (confirmSignOut) {
+        RcAlertDialog(
+            title = stringResource(R.string.feature_settings_sign_out_title),
+            text = stringResource(R.string.feature_settings_sign_out_message),
+            confirmText = stringResource(R.string.feature_settings_sign_out),
+            dismissText = stringResource(R.string.feature_settings_cancel),
+            onConfirm = {
+                confirmSignOut = false
+                onSignOut()
+            },
+            onDismiss = { confirmSignOut = false },
+        )
+    }
+}
+
+@Composable
+private fun AccountHeader(profile: UserProfile, onClick: () -> Unit) {
+    val name = profile.displayName ?: profile.username.orEmpty()
+    ListItem(
+        headlineContent = { Text(text = name, style = MaterialTheme.typography.titleMedium) },
+        supportingContent = profile.username?.let { { Text(text = "@$it") } },
+        leadingContent = { Avatar(image = profile.avatarUrl, name = name, size = 56.dp) },
+        trailingContent = {
+            Text(
+                text = stringResource(R.string.feature_settings_edit_profile),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        },
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier
+            .padding(vertical = Spacing.sm)
+            .clickable(role = Role.Button, onClick = onClick),
+    )
+}
+
+@Composable
+private fun SettingsRow(
+    title: String,
+    onClick: () -> Unit,
+    leading: @Composable () -> Unit,
+    summary: String? = null,
+    showChevron: Boolean = true,
+) {
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = summary?.let { { Text(it) } },
+        leadingContent = leading,
+        trailingContent = if (showChevron) {
+            { Icon(imageVector = RcIcons.ChevronForward, contentDescription = null) }
+        } else {
+            null
+        },
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier.clickable(role = Role.Button, onClick = onClick),
+    )
 }
 
 @Composable

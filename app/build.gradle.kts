@@ -40,10 +40,14 @@ android {
 
 dependencies {
     implementation(projects.core.common)
+    implementation(projects.core.data)
     implementation(projects.core.designsystem)
+    implementation(projects.core.domain)
     implementation(projects.core.ui)
+    implementation(projects.feature.auth)
     implementation(projects.feature.friends)
     implementation(projects.feature.insights)
+    implementation(projects.feature.profile)
     implementation(projects.feature.settings)
     implementation(projects.feature.today)
 

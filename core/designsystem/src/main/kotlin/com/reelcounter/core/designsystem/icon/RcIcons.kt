@@ -3,6 +3,10 @@ package com.reelcounter.core.designsystem.icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.rounded.Logout
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Settings
@@ -50,4 +54,11 @@ object RcIcons {
     val Info: ImageVector = Icons.Rounded.Info
     val Back: ImageVector = Icons.AutoMirrored.Rounded.ArrowBack
     val ChevronForward: ImageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight
+    val Success: ImageVector = Icons.Rounded.CheckCircle
+
+    // Account
+    val ShowPassword: ImageVector = Icons.Rounded.Visibility
+    val HidePassword: ImageVector = Icons.Rounded.VisibilityOff
+    val ChangePhoto: ImageVector = Icons.Rounded.PhotoCamera
+    val SignOut: ImageVector = Icons.AutoMirrored.Rounded.Logout
 }
