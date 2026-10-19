@@ -13,6 +13,7 @@ private fun SettingsScreenPreview() = PreviewTheme {
         profile = UserProfile(id = "1", username = "sam.k", displayName = "Sam Kim", bio = null, avatarUrl = null),
         onEditProfileClick = {},
         onTrackingClick = {},
+        onPrivacyClick = {},
         onHowWeCountClick = {},
         onSignOut = {},
     )

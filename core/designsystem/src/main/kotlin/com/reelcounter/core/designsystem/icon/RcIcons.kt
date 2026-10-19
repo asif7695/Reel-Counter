@@ -5,7 +5,11 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.PersonAdd
 import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Insights
@@ -61,4 +65,10 @@ object RcIcons {
     val HidePassword: ImageVector = Icons.Rounded.VisibilityOff
     val ChangePhoto: ImageVector = Icons.Rounded.PhotoCamera
     val SignOut: ImageVector = Icons.AutoMirrored.Rounded.Logout
+
+    // Social and privacy
+    val Search: ImageVector = Icons.Rounded.Search
+    val AddFriend: ImageVector = Icons.Rounded.PersonAdd
+    val More: ImageVector = Icons.Rounded.MoreVert
+    val Privacy: ImageVector = Icons.Rounded.Lock
 }

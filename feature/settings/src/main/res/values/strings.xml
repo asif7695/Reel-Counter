@@ -9,6 +9,9 @@
     <string name="feature_settings_section_tracking">Tracking</string>
     <string name="feature_settings_tracking">Tracking &amp; apps</string>
     <string name="feature_settings_tracking_summary">Usage access, pause, tracked apps and estimates</string>
+    <string name="feature_settings_section_privacy">Privacy</string>
+    <string name="feature_settings_privacy">Privacy &amp; friends</string>
+    <string name="feature_settings_privacy_summary">Who can see your activity, online status and blocked accounts</string>
     <string name="feature_settings_edit_profile">Edit</string>
     <string name="feature_settings_sign_out">Sign out</string>
     <string name="feature_settings_sign_out_title">Sign out?</string>

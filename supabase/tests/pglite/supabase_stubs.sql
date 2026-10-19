@@ -54,6 +54,33 @@ alter table storage.objects enable row level security;
 grant all on storage.objects to anon, authenticated, service_role;
 grant select on storage.buckets to anon, authenticated, service_role;
 
+-- realtime (Realtime Authorization): policies on realtime.messages decide who may join private
+-- channels; realtime.topic() is the channel being joined (tests set it with set_config).
+create schema realtime;
+grant usage on schema realtime to anon, authenticated, service_role;
+
+create table realtime.messages (
+  id        bigserial primary key,
+  topic     text not null,
+  extension text not null,
+  payload   jsonb,
+  event     text,
+  private   boolean default true
+);
+alter table realtime.messages enable row level security;
+grant select, insert on realtime.messages to anon, authenticated;
+grant usage on sequence realtime.messages_id_seq to anon, authenticated;
+
+create function realtime.topic() returns text
+language sql stable
+as $$ select nullif(current_setting('realtime.topic', true), '') $$;
+
+-- Broadcast from Database: Supabase's realtime.send queues a broadcast as a row in
+-- realtime.messages; the Realtime server delivers it to members allowed by the select policies.
+create function realtime.send(payload jsonb, event text, topic text, private boolean default true) returns void
+language sql
+as $$ insert into realtime.messages (topic, extension, payload, event, private) values (topic, 'broadcast', payload, event, private) $$;
+
 -- Same behavior as Supabase: every path segment except the file name.
 create function storage.foldername(name text) returns text[]
 language plpgsql

@@ -12,5 +12,6 @@ dependencies {
     api(libs.kotlinx.coroutines.core)
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.kotlinx.coroutines.android)
 }

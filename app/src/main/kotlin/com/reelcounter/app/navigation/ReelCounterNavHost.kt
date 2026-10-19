@@ -6,6 +6,8 @@ import androidx.navigation.compose.NavHost
 import com.reelcounter.app.ui.ReelCounterAppState
 import com.reelcounter.feature.friends.navigation.friendsScreen
 import com.reelcounter.feature.insights.navigation.insightsScreen
+import com.reelcounter.feature.privacy.navigation.navigateToPrivacy
+import com.reelcounter.feature.privacy.navigation.privacyScreen
 import com.reelcounter.feature.profile.navigation.editProfileScreen
 import com.reelcounter.feature.profile.navigation.navigateToEditProfile
 import com.reelcounter.feature.settings.navigation.navigateToHowWeCount
@@ -40,15 +42,17 @@ fun ReelCounterNavHost(
             },
         )
         insightsScreen()
-        friendsScreen()
+        friendsScreen(onOpenPrivacy = { navController.navigateToPrivacy() })
         settingsGraph(
             onEditProfileClick = { navController.navigateToEditProfile() },
             onTrackingClick = { navController.navigateToTrackingSettings() },
+            onPrivacyClick = { navController.navigateToPrivacy() },
             onHowWeCountClick = { navController.navigateToHowWeCount() },
             onBackClick = back,
             nestedGraphs = {
                 editProfileScreen(onBackClick = back)
                 trackingSettingsScreen(onBack = back, onSetUpTracking = { navController.navigateToTrackingSetup() })
+                privacyScreen(onBack = back)
             },
         )
     }

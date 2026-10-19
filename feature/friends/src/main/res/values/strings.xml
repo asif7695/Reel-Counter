@@ -1,6 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_friends_title">Friends</string>
+    <string name="feature_friends_search_label">Search by username</string>
+    <string name="feature_friends_no_results">Nobody found for “%1$s”.</string>
     <string name="feature_friends_empty_title">No friends yet</string>
-    <string name="feature_friends_empty_message">Add friends by username to compare app time and estimates. Your privacy settings decide what they can see.</string>
+    <string name="feature_friends_empty_message">Search for friends by their username. Once they accept, you can compare your app time.</string>
+    <string name="feature_friends_load_failed">Couldn\'t load your friends</string>
+    <string name="feature_friends_retry">Try again</string>
+
+    <string name="feature_friends_section_requests">Requests</string>
+    <string name="feature_friends_section_friends">Friends</string>
+    <string name="feature_friends_section_sent">Sent</string>
+
+    <string name="feature_friends_add">Add</string>
+    <string name="feature_friends_accept">Accept</string>
+    <string name="feature_friends_decline">Decline</string>
+    <string name="feature_friends_cancel_request">Cancel request</string>
+    <string name="feature_friends_already_friends">Friends</string>
+    <string name="feature_friends_online">Online</string>
+    <string name="feature_friends_more">More options</string>
+    <string name="feature_friends_remove">Remove friend</string>
+    <string name="feature_friends_block">Block</string>
+    <string name="feature_friends_cancel">Cancel</string>
+    <string name="feature_friends_change">Change</string>
+
+    <!-- What friends can see right now. Shown above everything on this screen. -->
+    <string name="feature_friends_visibility_friends">Friends you accept can see your daily app time and estimates.</string>
+    <string name="feature_friends_visibility_private">Only you can see your activity. Friends see your name, not your numbers.</string>
+    <string name="feature_friends_visibility_public">Anyone can see your daily app time and estimates.</string>
+
+    <string name="feature_friends_remove_title">Remove %1$s?</string>
+    <string name="feature_friends_remove_text">They won\'t see your activity any more, and you won\'t see theirs. They aren\'t notified.</string>
+    <string name="feature_friends_block_title">Block %1$s?</string>
+    <string name="feature_friends_block_text">You\'ll stop being friends. Neither of you can find, add or see the other until you unblock them in Privacy. They aren\'t notified.</string>
+
+    <string name="feature_friends_msg_requested">Friend request sent</string>
+    <string name="feature_friends_msg_now_friends">You\'re now friends</string>
+    <string name="feature_friends_msg_already_friends">You\'re already friends</string>
+    <string name="feature_friends_msg_already_requested">You\'ve already sent a request</string>
+    <string name="feature_friends_msg_not_accepting">This person isn\'t accepting friend requests</string>
+    <string name="feature_friends_msg_not_found">Couldn\'t find that person</string>
+    <string name="feature_friends_msg_blocked">Blocked</string>
+    <string name="feature_friends_error_network">You\'re offline. Try again when you\'re connected.</string>
+    <string name="feature_friends_error_rate_limited">That\'s a lot of requests. Wait a minute and try again.</string>
+    <string name="feature_friends_error_unknown">Something went wrong. Please try again.</string>
 </resources>

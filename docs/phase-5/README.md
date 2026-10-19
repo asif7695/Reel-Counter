@@ -129,7 +129,7 @@ After the clock was turned back, the read window started at the old (future) wat
 
 | Item | Status |
 |---|---|
-| **Default activity visibility is `friends`, but the privacy controls UI arrives in Phase 8.** Once Phase 6 ships friend requests, accepted friends would see activity before users can change who sees what. | **Decision needed before Phase 6 ships:** move a minimal "who can see my activity" control into Phase 6, or default new rows to `private` until Phase 8 |
+| **Default activity visibility is `friends`, but the privacy controls UI arrives in Phase 8.** Once Phase 6 ships friend requests, accepted friends would see activity before users can change who sees what. | **Resolved:** a minimal "who can see my activity" control shipped in Phase 6 ([phase-6 §4](../phase-6/README.md#4-who-can-see-my-activity-resolves-phase-5-9)) |
 | The app doesn't yet sync `user_platform_settings` (per-platform visibility is written by the Phase 8 privacy screen) | Phase 8 |
 | Multi-device totals (`daily_activity_totals`) aren't shown in the app yet | Phase 7 |
 | Parked (rejected) rows have no UI; they're kept with their error code for diagnostics | Phase 9 |

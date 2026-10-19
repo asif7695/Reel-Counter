@@ -48,6 +48,7 @@ fun RcTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
 ) {
     val message = errorText ?: supportingText
@@ -80,6 +81,7 @@ fun RcTextField(
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         visualTransformation = visualTransformation,
+        leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
     )
 }

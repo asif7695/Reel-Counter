@@ -287,6 +287,157 @@ await expectError('reference data is read-only', ERIN,
   `insert into public.platforms (id, display_name, android_packages, default_quality) values ('x', 'X', '{}', 'ESTIMATED')`, [], '42501');
 await expectError('anon cannot read activity', null, 'select id from public.daily_activity_summaries', [], '42501');
 
+// ── Phase 6: search, friend requests, blocks, presence ────────────────
+const FRAN = '00000000-0000-4000-8000-0000000000f1';
+const GABE = '00000000-0000-4000-8000-0000000000f2';
+const HANA = '00000000-0000-4000-8000-0000000000f3';
+const IVAN = '00000000-0000-4000-8000-0000000000f4';
+await db.query(
+  `insert into auth.users (id, email) values ($1, 'fran@example.com'), ($2, 'gabe@example.com'), ($3, 'hana@example.com'), ($4, 'ivan@example.com')`,
+  [FRAN, GABE, HANA, IVAN],
+);
+for (const [id, name] of [[FRAN, 'fran'], [GABE, 'gabe'], [HANA, 'hana_k'], [IVAN, 'ivan']]) {
+  await as(id, () => db.query(`update public.profiles set username = $2 where id = $1`, [id, name]));
+}
+const rpc = async (user, sql, params = []) => (await as(user, () => db.query(sql, params))).rows;
+const one = async (user, sql, params = []) => Object.values((await rpc(user, sql, params))[0])[0];
+
+console.log('\nsearch');
+{
+  const results = await rpc(FRAN, `select * from public.search_profiles('ga')`);
+  report(results.length === 1 && results[0].username === 'gabe', 'prefix search finds a user');
+  report(
+    Object.keys(results[0]).sort().join(',') === 'avatar_path,display_name,id,relationship,username',
+    'search returns only public card fields and the relationship (no email, no settings)',
+  );
+}
+await expectRows('one character is too short to search', FRAN, `select * from public.search_profiles('g')`, [], 0);
+await expectRows('you never find yourself', FRAN, `select * from public.search_profiles('fra')`, [], 0);
+await expectRows('LIKE wildcards are treated literally', FRAN, `select * from public.search_profiles('%a')`, [], 0);
+await as(IVAN, () => db.query(`update public.user_privacy_settings set discoverable = false where user_id = $1`, [IVAN]));
+await expectRows('people who turned off discoverability are not found', FRAN, `select * from public.search_profiles('iv')`, [], 0);
+await expectError('anon cannot search', null, `select * from public.search_profiles('ga')`, [], '42501');
+
+console.log('\nfriend requests');
+await expectValue('a request is sent', FRAN, `select public.send_friend_request($1)`, [GABE], 'requested');
+await expectValue('sending twice is reported, not duplicated', FRAN, `select public.send_friend_request($1)`, [GABE], 'already_requested');
+await expectValue('search shows it as outgoing', FRAN, `select relationship from public.search_profiles('gabe')`, [], 'outgoing');
+await expectValue('and as incoming for the recipient', GABE, `select relationship from public.search_profiles('fran')`, [], 'incoming');
+await expectValue("the sender can't accept their own request", FRAN, `select public.respond_friend_request($1, true)`, [GABE], 'not_found');
+await expectValue("a third person can't accept it", HANA, `select public.respond_friend_request($1, true)`, [FRAN], 'not_found');
+await expectValue('the recipient accepts', GABE, `select public.respond_friend_request($1, true)`, [FRAN], 'accepted');
+await expectValue('they are now friends', FRAN, `select public.send_friend_request($1)`, [GABE], 'already_friends');
+{
+  const mine = await rpc(FRAN, `select * from public.my_connections()`);
+  report(mine.length === 1 && mine[0].username === 'gabe' && mine[0].status === 'friend', 'my_connections lists the friendship');
+  report(!('email' in mine[0]), 'my_connections exposes no email');
+}
+
+await expectValue('a second request is sent', HANA, `select public.send_friend_request($1)`, [FRAN], 'requested');
+await expectValue('asking someone who already asked you makes you friends at once', FRAN, `select public.send_friend_request($1)`, [HANA], 'accepted');
+await expectValue('either friend can remove the friendship', HANA, `select public.remove_friend($1)`, [FRAN], 'removed');
+
+await expectValue('a declined request is deleted', HANA, `select public.send_friend_request($1)`, [GABE], 'requested');
+await expectValue('the recipient declines', GABE, `select public.respond_friend_request($1, false)`, [HANA], 'declined');
+await expectRows("the sender isn't told about the decline (no row left)", HANA, `select * from public.my_connections()`, [], 0);
+
+await expectValue('only the sender can cancel', HANA, `select public.send_friend_request($1)`, [GABE], 'requested');
+await expectValue("the recipient can't cancel someone else's request", GABE, `select public.cancel_friend_request($1)`, [HANA], 'not_found');
+await expectValue('the sender cancels', HANA, `select public.cancel_friend_request($1)`, [GABE], 'cancelled');
+
+await as(HANA, () => db.query(`update public.user_privacy_settings set accept_friend_requests = false where user_id = $1`, [HANA]));
+await expectValue('people who turned off requests can opt out', IVAN, `select public.send_friend_request($1)`, [HANA], 'not_accepting');
+await as(HANA, () => db.query(`update public.user_privacy_settings set accept_friend_requests = true where user_id = $1`, [HANA]));
+await expectValue('requests to yourself are refused', FRAN, `select public.send_friend_request($1)`, [FRAN], 'not_found');
+await expectValue('requests to unknown ids are refused', FRAN, `select public.send_friend_request(gen_random_uuid())`, [], 'not_found');
+
+console.log('\nblocks');
+await expectValue('blocking ends the friendship', GABE, `select public.block_user($1)`, [FRAN], 'blocked');
+await expectRows('the friendship is gone for both', FRAN, `select * from public.my_connections()`, [], 0);
+await expectValue("the blocked user can't send a request (and isn't told why)", FRAN, `select public.send_friend_request($1)`, [GABE], 'not_found');
+await expectRows('blocked users disappear from search, both ways', FRAN, `select * from public.search_profiles('gabe')`, [], 0);
+await expectRows('and the blocker cannot find the blocked user', GABE, `select * from public.search_profiles('fran')`, [], 0);
+await expectRows('the blocker can list whom they blocked', GABE, `select * from public.my_blocked_users()`, [], 1);
+await expectRows('the blocked person cannot', FRAN, `select * from public.my_blocked_users()`, [], 0);
+await expectValue('unblocking works', GABE, `select public.unblock_user($1)`, [FRAN], 'unblocked');
+await expectValue("but doesn't restore the friendship", FRAN, `select public.send_friend_request($1)`, [GABE], 'requested');
+
+console.log('\nrate limits');
+{
+  let code = null;
+  for (let i = 0; i < 61 && !code; i++) {
+    try {
+      await as(HANA, () => db.query(`select * from public.search_profiles('fr')`));
+    } catch (e) {
+      code = e.code;
+    }
+  }
+  report(code === 'RC002', 'the 61st search within a minute is refused with RC002', `got ${code}`);
+}
+
+console.log('\npresence');
+await expectValue('only the recipient can answer the new request', FRAN, `select public.respond_friend_request($1, true)`, [GABE], 'not_found');
+await expectValue('the recipient accepts it', GABE, `select public.respond_friend_request($1, true)`, [FRAN], 'accepted');
+await db.query(`insert into realtime.messages (topic, extension) values ($1, 'presence')`, [`presence:${FRAN}`]);
+async function joinsPresenceOf(viewer, owner) {
+  await db.query(`select set_config('realtime.topic', $1, false)`, [`presence:${owner}`]);
+  try {
+    const { rows } = await as(viewer, () => db.query(`select id from realtime.messages where extension = 'presence'`));
+    return rows.length > 0;
+  } finally {
+    await db.query(`select set_config('realtime.topic', '', false)`);
+  }
+}
+report(!(await joinsPresenceOf(GABE, FRAN)), 'presence is off by default, even for friends');
+await as(FRAN, () => db.query(`update public.user_privacy_settings set share_presence = true where user_id = $1`, [FRAN]));
+report(await joinsPresenceOf(GABE, FRAN), 'a friend sees presence once the owner opts in');
+report(!(await joinsPresenceOf(HANA, FRAN)), 'a non-friend never does');
+report(await joinsPresenceOf(FRAN, FRAN), 'the owner can join their own channel');
+await as(FRAN, () => db.query(`update public.user_privacy_settings set stealth_mode = true where user_id = $1`, [FRAN]));
+report(!(await joinsPresenceOf(GABE, FRAN)), 'stealth mode hides presence');
+await as(FRAN, () => db.query(`update public.user_privacy_settings set stealth_mode = false where user_id = $1`, [FRAN]));
+await db.query(`select set_config('realtime.topic', $1, false)`, [`presence:${FRAN}`]);
+await expectRows('the owner can share presence on their own channel', FRAN,
+  `insert into realtime.messages (topic, extension) values ('x', 'presence') returning id`, [], 1);
+await expectError("nobody can share presence on someone else's channel", GABE,
+  `insert into realtime.messages (topic, extension) values ('x', 'presence')`, [], '42501');
+await db.query(`select set_config('realtime.topic', 'presence:not-a-uuid', false)`);
+report(!(await joinsPresenceOf(GABE, 'not-a-uuid')), 'malformed channel names are refused');
+
+console.log('\nlive friendship updates');
+async function broadcastsTo(topic) {
+  const { rows } = await db.query(`select count(*)::int as n from realtime.messages where extension = 'broadcast' and topic = $1`, [topic]);
+  return rows[0].n;
+}
+await db.query(`delete from realtime.messages where extension = 'broadcast'`);
+await rpc(HANA, `select public.send_friend_request($1)`, [GABE]);
+report(
+  (await broadcastsTo(`friendships:${HANA}`)) === 1 && (await broadcastsTo(`friendships:${GABE}`)) === 1,
+  'a request notifies both people',
+);
+report((await broadcastsTo(`friendships:${FRAN}`)) === 0, 'and nobody else');
+await rpc(GABE, `select public.respond_friend_request($1, false)`, [HANA]);
+report((await broadcastsTo(`friendships:${HANA}`)) === 2, 'a deleted request notifies the sender too');
+{
+  const { rows } = await db.query(`select distinct payload::text as p, event from realtime.messages where extension = 'broadcast'`);
+  report(rows.length === 1 && rows[0].p === '{}' && rows[0].event === 'changed', 'updates carry no data, only "changed"');
+}
+async function receivesOn(viewer, topic) {
+  await db.query(`select set_config('realtime.topic', $1, false)`, [topic]);
+  try {
+    const { rows } = await as(viewer, () => db.query(`select id from realtime.messages where extension = 'broadcast'`));
+    return rows.length > 0;
+  } finally {
+    await db.query(`select set_config('realtime.topic', '', false)`);
+  }
+}
+report(await receivesOn(GABE, `friendships:${GABE}`), 'a user receives their own friendship updates');
+report(!(await receivesOn(GABE, `friendships:${HANA}`)), "but not someone else's");
+await db.query(`select set_config('realtime.topic', $1, false)`, [`friendships:${HANA}`]);
+await expectError("nobody can send fake updates to someone's channel", GABE,
+  `insert into realtime.messages (topic, extension, event) values ('x', 'broadcast', 'changed')`, [], '42501');
+await db.query(`select set_config('realtime.topic', '', false)`);
+
 // ── Account deletion cascades ─────────────────────────────────────────
 console.log('\naccount deletion');
 await db.query('delete from auth.users where id = $1', [CAROL]);

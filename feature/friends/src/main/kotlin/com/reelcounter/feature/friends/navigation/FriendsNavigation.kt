@@ -13,8 +13,8 @@ data object FriendsRoute
 fun NavController.navigateToFriends(navOptions: NavOptions? = null) =
     navigate(route = FriendsRoute, navOptions = navOptions)
 
-fun NavGraphBuilder.friendsScreen() {
+fun NavGraphBuilder.friendsScreen(onOpenPrivacy: () -> Unit) {
     composable<FriendsRoute> {
-        FriendsScreen()
+        FriendsScreen(onOpenPrivacy = onOpenPrivacy)
     }
 }

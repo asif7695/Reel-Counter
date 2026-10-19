@@ -10,8 +10,9 @@ ReelCounter is an Android app for tracking short-form video habits across platfo
 | 2 Project setup & UI foundation | **Approved**: [phase-2/README.md](phase-2/README.md) |
 | 3 Authentication & user profiles | **Approved**: [phase-3/README.md](phase-3/README.md) |
 | 4 Tracking engine & local data | **Approved**: [phase-4/README.md](phase-4/README.md) |
-| 5 Backend integration & activity data model | **Delivered, awaiting review**: [phase-5/README.md](phase-5/README.md) |
-| 6–10 | Not started |
+| 5 Backend integration & activity data model | **Approved**: [phase-5/README.md](phase-5/README.md) |
+| 6 Friends & social (with a minimal "who can see my activity" control) | **Delivered, awaiting review**: [phase-6/README.md](phase-6/README.md) |
+| 7–10 | Not started |
 
 ## Phase 1 deliverables
 

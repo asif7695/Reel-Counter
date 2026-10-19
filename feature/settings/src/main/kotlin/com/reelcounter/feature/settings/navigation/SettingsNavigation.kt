@@ -32,6 +32,7 @@ fun NavController.navigateToHowWeCount(navOptions: NavOptions? = null) =
 fun NavGraphBuilder.settingsGraph(
     onEditProfileClick: () -> Unit,
     onTrackingClick: () -> Unit,
+    onPrivacyClick: () -> Unit,
     onHowWeCountClick: () -> Unit,
     onBackClick: () -> Unit,
     nestedGraphs: NavGraphBuilder.() -> Unit = {},
@@ -41,6 +42,7 @@ fun NavGraphBuilder.settingsGraph(
             SettingsScreen(
                 onEditProfileClick = onEditProfileClick,
                 onTrackingClick = onTrackingClick,
+                onPrivacyClick = onPrivacyClick,
                 onHowWeCountClick = onHowWeCountClick,
             )
         }

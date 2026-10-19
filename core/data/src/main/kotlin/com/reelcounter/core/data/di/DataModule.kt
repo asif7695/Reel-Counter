@@ -6,6 +6,12 @@ import com.reelcounter.core.data.auth.DefaultAuthRepository
 import com.reelcounter.core.data.auth.PasswordResetFlag
 import com.reelcounter.core.data.profile.AndroidAvatarImageProcessor
 import com.reelcounter.core.data.profile.DefaultProfileRepository
+import com.reelcounter.core.data.social.DefaultFriendsRepository
+import com.reelcounter.core.data.social.DefaultPrivacyRepository
+import com.reelcounter.core.data.social.RealtimeCoordinator
+import com.reelcounter.core.domain.social.FriendsRepository
+import com.reelcounter.core.domain.social.PresenceRepository
+import com.reelcounter.core.domain.social.PrivacyRepository
 import com.reelcounter.core.data.sync.AccountDataGuard
 import com.reelcounter.core.data.sync.ActivitySyncer
 import com.reelcounter.core.data.tracking.DefaultPlatformSettingsRepository
@@ -55,4 +61,17 @@ internal abstract class DataModule {
     @Binds
     @IntoSet
     abstract fun bindAccountDataGuard(impl: AccountDataGuard): AppInitializer
+
+    @Binds
+    abstract fun bindFriendsRepository(impl: DefaultFriendsRepository): FriendsRepository
+
+    @Binds
+    abstract fun bindPrivacyRepository(impl: DefaultPrivacyRepository): PrivacyRepository
+
+    @Binds
+    abstract fun bindPresenceRepository(impl: RealtimeCoordinator): PresenceRepository
+
+    @Binds
+    @IntoSet
+    abstract fun bindRealtimeCoordinator(impl: RealtimeCoordinator): AppInitializer
 }

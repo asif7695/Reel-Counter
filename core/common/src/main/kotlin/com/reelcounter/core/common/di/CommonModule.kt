@@ -1,5 +1,7 @@
 package com.reelcounter.core.common.di
 
+import com.reelcounter.core.common.AppForegroundMonitor
+import com.reelcounter.core.common.ProcessAppForegroundMonitor
 import com.reelcounter.core.common.dispatchers.ApplicationScope
 import com.reelcounter.core.common.dispatchers.Dispatcher
 import com.reelcounter.core.common.dispatchers.RcDispatchers
@@ -22,6 +24,9 @@ internal abstract class CommonModule {
 
     @Binds
     abstract fun bindNetworkMonitor(impl: ConnectivityManagerNetworkMonitor): NetworkMonitor
+
+    @Binds
+    abstract fun bindAppForegroundMonitor(impl: ProcessAppForegroundMonitor): AppForegroundMonitor
 
     companion object {
         @Provides

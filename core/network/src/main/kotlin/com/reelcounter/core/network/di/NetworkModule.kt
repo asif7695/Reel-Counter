@@ -8,7 +8,11 @@ import com.reelcounter.core.network.auth.AuthRemoteDataSource
 import com.reelcounter.core.network.auth.SupabaseAuthRemoteDataSource
 import com.reelcounter.core.network.profile.ProfileRemoteDataSource
 import com.reelcounter.core.network.profile.SupabaseProfileRemoteDataSource
+import com.reelcounter.core.network.realtime.RealtimeRemoteDataSource
+import com.reelcounter.core.network.realtime.SupabaseRealtimeRemoteDataSource
 import com.reelcounter.core.network.session.EncryptedAuthStorage
+import com.reelcounter.core.network.social.SocialRemoteDataSource
+import com.reelcounter.core.network.social.SupabaseSocialRemoteDataSource
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -19,6 +23,7 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
 import javax.inject.Singleton
 
@@ -34,6 +39,12 @@ internal abstract class NetworkModule {
 
     @Binds
     abstract fun bindActivityRemoteDataSource(impl: SupabaseActivityRemoteDataSource): ActivityRemoteDataSource
+
+    @Binds
+    abstract fun bindSocialRemoteDataSource(impl: SupabaseSocialRemoteDataSource): SocialRemoteDataSource
+
+    @Binds
+    abstract fun bindRealtimeRemoteDataSource(impl: SupabaseRealtimeRemoteDataSource): RealtimeRemoteDataSource
 
     companion object {
         @Provides
@@ -58,6 +69,7 @@ internal abstract class NetworkModule {
                     alwaysAutoRefresh = true
                 }
                 install(Postgrest)
+                install(Realtime)
                 install(Storage)
             }
         }

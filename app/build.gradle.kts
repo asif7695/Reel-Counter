@@ -49,6 +49,7 @@ dependencies {
     implementation(projects.feature.auth)
     implementation(projects.feature.friends)
     implementation(projects.feature.insights)
+    implementation(projects.feature.privacy)
     implementation(projects.feature.profile)
     implementation(projects.feature.settings)
     implementation(projects.feature.today)
