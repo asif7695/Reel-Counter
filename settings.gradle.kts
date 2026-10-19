@@ -1,0 +1,51 @@
+pluginManagement {
+    includeBuild("build-logic")
+    repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        mavenCentral()
+    }
+}
+
+rootProject.name = "ReelCounter"
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+include(":app")
+include(":core:common")
+include(":core:designsystem")
+include(":core:model")
+include(":core:preview")
+include(":core:ui")
+include(":feature:friends")
+include(":feature:insights")
+include(":feature:settings")
+include(":feature:today")
+
+check(JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
+    """
+    ReelCounter requires JDK 17+ but Gradle is running on JDK ${JavaVersion.current()}.
+    Java home: [${System.getProperty("java.home")}]
+    In Android Studio: Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JDK.
+    """.trimIndent()
+}

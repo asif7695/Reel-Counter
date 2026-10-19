@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_insights_title">Insights</string>
+    <string name="feature_insights_empty_title">Not enough data yet</string>
+    <string name="feature_insights_empty_message">Weekly and monthly trends appear after your first full day of tracking.</string>
+</resources>
