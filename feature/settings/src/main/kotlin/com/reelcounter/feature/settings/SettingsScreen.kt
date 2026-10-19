@@ -34,6 +34,7 @@ import com.reelcounter.core.ui.profile.Avatar
 @Composable
 internal fun SettingsScreen(
     onEditProfileClick: () -> Unit,
+    onTrackingClick: () -> Unit,
     onHowWeCountClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
@@ -42,17 +43,19 @@ internal fun SettingsScreen(
     SettingsScreen(
         profile = profile,
         onEditProfileClick = onEditProfileClick,
+        onTrackingClick = onTrackingClick,
         onHowWeCountClick = onHowWeCountClick,
         onSignOut = viewModel::signOut,
         modifier = modifier,
     )
 }
 
-// Privacy, tracking and data controls join this list in Phases 4 and 8.
+// Privacy and data controls join this list in Phase 8.
 @Composable
 internal fun SettingsScreen(
     profile: UserProfile?,
     onEditProfileClick: () -> Unit,
+    onTrackingClick: () -> Unit,
     onHowWeCountClick: () -> Unit,
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
@@ -71,6 +74,14 @@ internal fun SettingsScreen(
             if (profile != null) {
                 AccountHeader(profile = profile, onClick = onEditProfileClick)
             }
+
+            SectionHeader(text = stringResource(R.string.feature_settings_section_tracking))
+            SettingsRow(
+                title = stringResource(R.string.feature_settings_tracking),
+                summary = stringResource(R.string.feature_settings_tracking_summary),
+                leading = { Icon(imageVector = RcIcons.Today, contentDescription = null) },
+                onClick = onTrackingClick,
+            )
 
             SectionHeader(text = stringResource(R.string.feature_settings_section_about_numbers))
             SettingsRow(

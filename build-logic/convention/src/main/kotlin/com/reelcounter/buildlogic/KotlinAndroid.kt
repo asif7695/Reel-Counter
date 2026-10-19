@@ -58,6 +58,10 @@ internal fun Project.configureKotlinJvm() {
 
 internal fun Lint.configureLint() {
     abortOnError = true
+    // Lint (32.4.1) intermittently crashes inside its Kotlin analysis when reading unit-test
+    // sources compiled with Kotlin 2.4 ("bug in lint", FIR resolve error). Production code is
+    // still fully linted. Re-enable after the next lint/AGP update.
+    ignoreTestSources = true
     // Dependency versions are pinned deliberately in the version catalog and bumped as a reviewed change.
     disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable")
 }

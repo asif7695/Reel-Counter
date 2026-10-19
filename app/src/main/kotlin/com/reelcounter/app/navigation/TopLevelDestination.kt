@@ -7,12 +7,12 @@ import com.reelcounter.core.designsystem.icon.RcIcons
 import com.reelcounter.feature.friends.navigation.FriendsRoute
 import com.reelcounter.feature.insights.navigation.InsightsRoute
 import com.reelcounter.feature.settings.navigation.SettingsGraph
-import com.reelcounter.feature.today.navigation.TodayRoute
+import com.reelcounter.feature.today.navigation.TodayGraph
 import kotlin.reflect.KClass
 
 /**
  * The tabs of the navigation bar or rail. [baseRoute] is what marks a tab as selected: the route
- * itself, or the nested graph for tabs that have sub-screens (Settings).
+ * itself, or the nested graph for tabs that have sub-screens (Today, Settings).
  */
 enum class TopLevelDestination(
     val selectedIcon: ImageVector,
@@ -24,7 +24,7 @@ enum class TopLevelDestination(
         selectedIcon = RcIcons.Today,
         unselectedIcon = RcIcons.TodayOutlined,
         labelRes = R.string.nav_today,
-        baseRoute = TodayRoute::class,
+        baseRoute = TodayGraph::class,
     ),
     INSIGHTS(
         selectedIcon = RcIcons.Insights,

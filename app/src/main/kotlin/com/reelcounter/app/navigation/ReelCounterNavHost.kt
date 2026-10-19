@@ -10,8 +10,12 @@ import com.reelcounter.feature.profile.navigation.editProfileScreen
 import com.reelcounter.feature.profile.navigation.navigateToEditProfile
 import com.reelcounter.feature.settings.navigation.navigateToHowWeCount
 import com.reelcounter.feature.settings.navigation.settingsGraph
-import com.reelcounter.feature.today.navigation.TodayRoute
-import com.reelcounter.feature.today.navigation.todayScreen
+import com.reelcounter.feature.today.navigation.TodayGraph
+import com.reelcounter.feature.today.navigation.todayGraph
+import com.reelcounter.feature.tracking.navigation.navigateToTrackingSettings
+import com.reelcounter.feature.tracking.navigation.navigateToTrackingSetup
+import com.reelcounter.feature.tracking.navigation.trackingSettingsScreen
+import com.reelcounter.feature.tracking.navigation.trackingSetupScreen
 
 /**
  * The app's navigation graph. Features expose their destinations as NavGraphBuilder extensions and
@@ -23,20 +27,28 @@ fun ReelCounterNavHost(
     modifier: Modifier = Modifier,
 ) {
     val navController = appState.navController
+    val back: () -> Unit = { navController.popBackStack() }
     NavHost(
         navController = navController,
-        startDestination = TodayRoute,
+        startDestination = TodayGraph,
         modifier = modifier,
     ) {
-        todayScreen()
+        todayGraph(
+            onSetUpTracking = { navController.navigateToTrackingSetup() },
+            nestedGraphs = {
+                trackingSetupScreen(onFinished = back)
+            },
+        )
         insightsScreen()
         friendsScreen()
         settingsGraph(
             onEditProfileClick = { navController.navigateToEditProfile() },
+            onTrackingClick = { navController.navigateToTrackingSettings() },
             onHowWeCountClick = { navController.navigateToHowWeCount() },
-            onBackClick = { navController.popBackStack() },
+            onBackClick = back,
             nestedGraphs = {
-                editProfileScreen(onBackClick = { navController.popBackStack() })
+                editProfileScreen(onBackClick = back)
+                trackingSettingsScreen(onBack = back, onSetUpTracking = { navController.navigateToTrackingSetup() })
             },
         )
     }

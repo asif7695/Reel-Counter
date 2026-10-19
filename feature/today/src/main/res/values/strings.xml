@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_today_title">Today</string>
-    <string name="feature_today_empty_title">No activity yet</string>
-    <string name="feature_today_empty_message">Once tracking is set up, today\'s app time and reel estimates appear here.</string>
+    <string name="feature_today_setup_title">See your app time</string>
+    <string name="feature_today_setup_message">Set up tracking to see how long you spend in TikTok, Instagram, YouTube and Facebook, with honest reel estimates.</string>
+    <string name="feature_today_setup_action">Set up tracking</string>
+    <string name="feature_today_total_label">App time today, tracked apps</string>
+    <string name="feature_today_no_data">No data yet</string>
+    <string name="feature_today_updated_at">Updated %1$s · pull down to refresh</string>
+    <string name="feature_today_not_updated">Not updated yet</string>
+    <string name="feature_today_paused">Tracking is paused. Time spent now isn\'t recorded.</string>
+    <string name="feature_today_access_off">Usage access is off, so today\'s figures aren\'t updating.</string>
+    <string name="feature_today_turn_on">Turn it back on</string>
+    <string name="feature_today_estimate_note">Reel counts are estimates from app time: Android can\'t see which part of an app you\'re using.</string>
 </resources>

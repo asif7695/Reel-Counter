@@ -31,13 +31,18 @@ fun NavController.navigateToHowWeCount(navOptions: NavOptions? = null) =
  */
 fun NavGraphBuilder.settingsGraph(
     onEditProfileClick: () -> Unit,
+    onTrackingClick: () -> Unit,
     onHowWeCountClick: () -> Unit,
     onBackClick: () -> Unit,
     nestedGraphs: NavGraphBuilder.() -> Unit = {},
 ) {
     navigation<SettingsGraph>(startDestination = SettingsRoute) {
         composable<SettingsRoute> {
-            SettingsScreen(onEditProfileClick = onEditProfileClick, onHowWeCountClick = onHowWeCountClick)
+            SettingsScreen(
+                onEditProfileClick = onEditProfileClick,
+                onTrackingClick = onTrackingClick,
+                onHowWeCountClick = onHowWeCountClick,
+            )
         }
         composable<HowWeCountRoute> {
             HowWeCountScreen(onBackClick = onBackClick)
