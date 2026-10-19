@@ -76,6 +76,17 @@ class TrackingSetupViewModelTest {
     }
 
     @Test
+    fun `re-accepting an updated disclosure with access already granted finishes straight away`() {
+        tracking.statusAfterDisclosure = TrackingStatus.Active
+        val viewModel = viewModel()
+
+        viewModel.acceptDisclosure()
+
+        assertEquals(SetupStep.Done, viewModel.uiState.value.step)
+        assertEquals(1, tracking.refreshCount)
+    }
+
+    @Test
     fun `returning after revoking access resumes at the permission step`() {
         tracking.statusFlow.value = TrackingStatus.NeedsUsageAccess
         assertEquals(SetupStep.GrantAccess, viewModel().uiState.value.step)

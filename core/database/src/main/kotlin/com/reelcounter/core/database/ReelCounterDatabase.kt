@@ -1,5 +1,6 @@
 package com.reelcounter.core.database
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.reelcounter.core.database.dao.DailyUsageDao
@@ -24,7 +25,9 @@ import com.reelcounter.core.database.model.ZoneChangeEntity
         ZoneChangeEntity::class,
         IngestStateEntity::class,
     ],
-    version = 1,
+    // v2 (Phase 5): daily_usage.sync_error, ingest_state.last_revision; additive, so automatic.
+    version = 2,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
     exportSchema = true,
 )
 abstract class ReelCounterDatabase : RoomDatabase() {

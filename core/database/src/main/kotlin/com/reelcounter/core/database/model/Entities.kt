@@ -41,6 +41,8 @@ data class DailyUsageEntity(
     @ColumnInfo(name = "is_final") val isFinal: Boolean,
     val revision: Long,
     val dirty: Boolean,
+    /** Set when the server permanently rejected this row (e.g. a failed check); it isn't retried. v2. */
+    @ColumnInfo(name = "sync_error") val syncError: String? = null,
 )
 
 /**
@@ -79,4 +81,9 @@ data class IngestStateEntity(
     @androidx.room.PrimaryKey val id: Int = 0,
     @ColumnInfo(name = "watermark_ms") val watermarkMs: Long,
     @ColumnInfo(name = "last_success_ms") val lastSuccessMs: Long,
+    /**
+     * The highest revision handed out. Revisions decide upload conflicts, so they must only grow,
+     * even if the user turns the clock back. v2.
+     */
+    @ColumnInfo(name = "last_revision", defaultValue = "0") val lastRevision: Long = 0,
 )

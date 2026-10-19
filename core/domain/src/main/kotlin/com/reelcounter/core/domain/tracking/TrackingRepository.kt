@@ -39,8 +39,16 @@ enum class TrackingStatus {
 
 enum class RefreshResult { Updated, NotPermitted, Paused, DeviceLocked }
 
-/** The disclosure text version the app currently shows. Bump it when what's collected changes. */
-const val CURRENT_DISCLOSURE_VERSION = 1
+/**
+ * The disclosure text version the app currently shows. Bump it when what's collected or shared
+ * changes, so everyone sees the new text and agrees again.
+ *  1 (Phase 4): app time read and kept on the device.
+ *  2 (Phase 5): daily totals also saved to the user's account.
+ */
+const val CURRENT_DISCLOSURE_VERSION = 2
+
+/** Daily totals are uploaded only for users who agreed to a disclosure that says so. */
+const val UPLOAD_CONSENT_VERSION = 2
 
 /** Which platforms are tracked, and how each one is estimated. */
 interface PlatformSettingsRepository {

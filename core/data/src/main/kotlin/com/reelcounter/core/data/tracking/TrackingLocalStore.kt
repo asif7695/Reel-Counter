@@ -53,7 +53,10 @@ internal data class PlatformSettings(
     val secondsPerReel: Double?,
 )
 
-internal data class IngestState(val watermarkMs: Long, val lastSuccessMs: Long)
+internal data class IngestState(val watermarkMs: Long, val lastSuccessMs: Long, val lastRevision: Long = 0)
+
+/** Identifies one uploaded row version, so only that exact version is marked synced. */
+internal data class RowVersion(val date: LocalDate, val platformId: String, val revision: Long)
 
 /** Everything the ingestor and repositories persist, behind an interface so tests run in memory. */
 internal interface TrackingLocalStore {
@@ -62,6 +65,16 @@ internal interface TrackingLocalStore {
     suspend fun ingestState(): IngestState?
     suspend fun saveIngestState(state: IngestState)
     fun observeLastSuccess(): Flow<Long?>
+
+    /** A revision greater than every one handed out before, and at least [nowMs]. */
+    suspend fun nextRevision(nowMs: Long): Long
+
+    suspend fun dirtyRows(limit: Int): List<DailyRow>
+    suspend fun markSynced(versions: List<RowVersion>)
+    suspend fun markRejected(version: RowVersion, error: String)
+
+    /** Deletes all tracking data recorded for the previous account. */
+    suspend fun clearForNewOwner()
 
     suspend fun earliestOpenSessionStart(): Long?
     suspend fun replaceSessionsFrom(fromMs: Long, sessions: List<UsageSession>)
@@ -99,12 +112,37 @@ internal class RoomTrackingLocalStore @Inject constructor(
 
     override suspend fun <T> transaction(block: suspend () -> T): T = database.withTransaction { block() }
 
-    override suspend fun ingestState() = ingest.get()?.let { IngestState(it.watermarkMs, it.lastSuccessMs) }
+    override suspend fun ingestState() = ingest.get()?.let { IngestState(it.watermarkMs, it.lastSuccessMs, it.lastRevision) }
 
-    override suspend fun saveIngestState(state: IngestState) =
-        ingest.upsert(IngestStateEntity(watermarkMs = state.watermarkMs, lastSuccessMs = state.lastSuccessMs))
+    override suspend fun saveIngestState(state: IngestState) = ingest.upsert(
+        IngestStateEntity(watermarkMs = state.watermarkMs, lastSuccessMs = state.lastSuccessMs, lastRevision = state.lastRevision),
+    )
 
     override fun observeLastSuccess(): Flow<Long?> = ingest.observeLastSuccess()
+
+    override suspend fun nextRevision(nowMs: Long): Long = database.withTransaction {
+        val current = ingest.get()
+        val revision = maxOf(nowMs, (current?.lastRevision ?: 0L) + 1)
+        ingest.upsert((current ?: IngestStateEntity(watermarkMs = 0, lastSuccessMs = 0)).copy(lastRevision = revision))
+        revision
+    }
+
+    override suspend fun dirtyRows(limit: Int) = daily.dirty(limit).map { it.toRow() }
+
+    override suspend fun markSynced(versions: List<RowVersion>) = database.withTransaction {
+        versions.forEach { daily.markSynced(it.date.toString(), it.platformId, it.revision) }
+    }
+
+    override suspend fun markRejected(version: RowVersion, error: String) =
+        daily.markRejected(version.date.toString(), version.platformId, version.revision, error)
+
+    override suspend fun clearForNewOwner() = database.withTransaction {
+        sessions.deleteAll()
+        daily.deleteAll()
+        coverage.deleteAll()
+        settings.deleteAll()
+        ingest.deleteAll()
+    }
 
     override suspend fun earliestOpenSessionStart(): Long? = sessions.earliestOpenStart()
 

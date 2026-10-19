@@ -69,7 +69,13 @@ class TrackingSetupViewModel @Inject constructor(
         _uiState.update { it.copy(isWorking = true) }
         viewModelScope.launch {
             trackingRepository.acceptDisclosure(CURRENT_DISCLOSURE_VERSION)
-            _uiState.update { it.copy(isWorking = false, step = SetupStep.ChooseApps) }
+            // Someone re-accepting an updated disclosure usually still has usage access; their app
+            // choices are kept, so there's nothing left to set up.
+            if (trackingRepository.status.first() == TrackingStatus.Active) {
+                finish()
+            } else {
+                _uiState.update { it.copy(isWorking = false, step = SetupStep.ChooseApps) }
+            }
         }
     }
 

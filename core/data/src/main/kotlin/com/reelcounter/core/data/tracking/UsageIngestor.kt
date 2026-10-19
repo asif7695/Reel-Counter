@@ -63,6 +63,9 @@ internal class UsageIngestor @Inject constructor(
         val state = store.ingestState()
         var windowStart = state?.let { it.watermarkMs - OVERLAP_MS } ?: DayBucketer.startOfDayMs(today.minusDays(BACKFILL_DAYS), zone)
         store.earliestOpenSessionStart()?.let { windowStart = minOf(windowStart, it) }
+        // Always look back at least the overlap from *now*. Normally a no-op; after the clock is
+        // turned back, the old watermark is in the future and new events would otherwise be skipped.
+        windowStart = minOf(windowStart, now - OVERLAP_MS)
         // Never read time from before the last resume: it was spent while tracking was paused.
         prefs.resumedAtMs?.let { windowStart = maxOf(windowStart, it) }
         windowStart = minOf(windowStart, now)
@@ -80,6 +83,10 @@ internal class UsageIngestor @Inject constructor(
         }
 
         store.transaction {
+            // One revision for everything this read writes; strictly greater than any before it,
+            // even if the clock was turned back, so the server never mistakes it for stale data.
+            val revision = store.nextRevision(now)
+
             // Replace only what this read can fully re-derive: sessions starting at or after the
             // first event returned. With no events at all, nothing is replaced.
             if (firstEventMs != null) {
@@ -91,29 +98,31 @@ internal class UsageIngestor @Inject constructor(
             val finalDates = store.dailyRows(coveredDates).filter { it.isFinal }.map { it.date }.toSet()
             val datesToCompute = coveredDates - finalDates
             if (datesToCompute.isNotEmpty()) {
-                writeDailyRows(datesToCompute, tracked.map { it.platform.id }.toSet(), settings, zone, now)
+                writeDailyRows(datesToCompute, tracked.map { it.platform.id }.toSet(), settings, zone, revision)
             }
             updateCoverage(coveredDates - finalDates, coverageStart, now, zone)
 
-            store.finalizeBefore(today.minusDays(FINAL_AFTER_DAYS), revision = now)
+            store.finalizeBefore(today.minusDays(FINAL_AFTER_DAYS), revision = revision)
             store.pruneSessionsEndedBefore(DayBucketer.startOfDayMs(today.minusDays(SESSION_RETENTION_DAYS), zone))
-            store.saveIngestState(IngestState(watermarkMs = now, lastSuccessMs = now))
+            store.saveIngestState(IngestState(watermarkMs = now, lastSuccessMs = now, lastRevision = revision))
         }
         RefreshResult.Updated
     }
 
     /** Re-applies estimation settings to recent days after the user changes them. */
     suspend fun recomputeEstimates() = mutex.withLock {
-        val settings = store.platformSettings().associateBy { it.platformId }
-        val now = time.nowMs()
-        val updated = store.nonFinalRows().mapNotNull { row ->
-            val platform = PlatformCatalog.forId(row.platformId) ?: return@mapNotNull null
-            val recalculated = DailyRowCalculator.calculate(
-                row.date, platform, DayTotals(row.foregroundMs, row.sessionCount), settings[row.platformId], row.tzId, now,
-            )
-            recalculated.takeUnless { it.sameFiguresAs(row) }
+        store.transaction {
+            val settings = store.platformSettings().associateBy { it.platformId }
+            val revision = store.nextRevision(time.nowMs())
+            val updated = store.nonFinalRows().mapNotNull { row ->
+                val platform = PlatformCatalog.forId(row.platformId) ?: return@mapNotNull null
+                val recalculated = DailyRowCalculator.calculate(
+                    row.date, platform, DayTotals(row.foregroundMs, row.sessionCount), settings[row.platformId], row.tzId, revision,
+                )
+                recalculated.takeUnless { it.sameFiguresAs(row) }
+            }
+            store.saveDailyRows(updated)
         }
-        store.saveDailyRows(updated)
     }
 
     /** Ends provisional sessions where they are; called before pausing. */
@@ -128,7 +137,7 @@ internal class UsageIngestor @Inject constructor(
         trackedIds: Set<String>,
         settings: Map<String, PlatformSettings>,
         zone: ZoneId,
-        now: Long,
+        revision: Long,
     ) {
         // A day's sessions can start the evening before (other zones, midnight crossings).
         val rangeStart = DayBucketer.startOfDayMs(dates.min().minusDays(1), zone)
@@ -146,7 +155,7 @@ internal class UsageIngestor @Inject constructor(
                     totals = totals[DayPlatformKey(date, platformId)] ?: DayTotals(0, 0),
                     settings = settings[platformId],
                     tzId = zone.id,
-                    revision = now,
+                    revision = revision,
                 )
                 // Unchanged rows aren't rewritten, so they don't need re-uploading (Phase 5).
                 row.takeUnless { existing[date to platformId]?.sameFiguresAs(it) == true }

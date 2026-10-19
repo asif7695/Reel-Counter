@@ -124,6 +124,7 @@ private fun ColumnScope.DisclosureStep(isWorking: Boolean, onAccept: () -> Unit,
                 R.string.feature_tracking_disclosure_not_collected,
                 R.string.feature_tracking_disclosure_other_apps,
                 R.string.feature_tracking_disclosure_storage,
+                R.string.feature_tracking_disclosure_sharing,
                 R.string.feature_tracking_disclosure_estimates,
                 R.string.feature_tracking_disclosure_control,
             ).forEach { Bullet(stringResource(it)) }

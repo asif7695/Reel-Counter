@@ -1,6 +1,7 @@
 package com.reelcounter.core.data.tracking
 
 import com.reelcounter.core.datastore.TrackingPreferencesStore
+import com.reelcounter.core.domain.sync.SyncScheduler
 import com.reelcounter.core.domain.tracking.CURRENT_DISCLOSURE_VERSION
 import com.reelcounter.core.domain.tracking.InstalledApps
 import com.reelcounter.core.domain.tracking.PlatformCatalog
@@ -16,6 +17,7 @@ import com.reelcounter.core.model.UnavailableReason
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,6 +31,7 @@ internal class DefaultTrackingRepository @Inject constructor(
     usageAccess: UsageAccessMonitor,
     private val installedApps: InstalledApps,
     private val time: TimeSource,
+    private val syncScheduler: SyncScheduler,
 ) : TrackingRepository {
 
     override val status: Flow<TrackingStatus> = combine(preferences.preferences, usageAccess.isGranted) { prefs, granted ->
@@ -40,7 +43,8 @@ internal class DefaultTrackingRepository @Inject constructor(
         }
     }.distinctUntilChanged()
 
-    override val lastUpdatedMs: Flow<Long?> = store.observeLastSuccess()
+    // 0 means the state row exists but no read has completed yet.
+    override val lastUpdatedMs: Flow<Long?> = store.observeLastSuccess().map { it?.takeIf { ms -> ms > 0 } }
 
     override fun observeDay(date: LocalDate): Flow<List<DailyPlatformActivity>> = combine(
         store.observeDay(date),
@@ -68,7 +72,10 @@ internal class DefaultTrackingRepository @Inject constructor(
             }
     }
 
-    override suspend fun refresh(): RefreshResult = ingestor.ingest()
+    override suspend fun refresh(): RefreshResult = ingestor.ingest().also { result ->
+        // Upload whatever changed. The sync itself checks sign-in and consent, and waits for a network.
+        if (result == RefreshResult.Updated) syncScheduler.requestSync()
+    }
 
     override suspend fun acceptDisclosure(version: Int) = preferences.acceptDisclosure(version, time.nowMs())
 

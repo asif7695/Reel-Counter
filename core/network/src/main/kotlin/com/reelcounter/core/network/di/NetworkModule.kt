@@ -2,6 +2,8 @@ package com.reelcounter.core.network.di
 
 import com.reelcounter.core.network.BuildConfig
 import com.reelcounter.core.network.SupabaseConfig
+import com.reelcounter.core.network.activity.ActivityRemoteDataSource
+import com.reelcounter.core.network.activity.SupabaseActivityRemoteDataSource
 import com.reelcounter.core.network.auth.AuthRemoteDataSource
 import com.reelcounter.core.network.auth.SupabaseAuthRemoteDataSource
 import com.reelcounter.core.network.profile.ProfileRemoteDataSource
@@ -29,6 +31,9 @@ internal abstract class NetworkModule {
 
     @Binds
     abstract fun bindProfileRemoteDataSource(impl: SupabaseProfileRemoteDataSource): ProfileRemoteDataSource
+
+    @Binds
+    abstract fun bindActivityRemoteDataSource(impl: SupabaseActivityRemoteDataSource): ActivityRemoteDataSource
 
     companion object {
         @Provides

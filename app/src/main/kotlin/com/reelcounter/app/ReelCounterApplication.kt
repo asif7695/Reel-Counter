@@ -3,7 +3,7 @@ package com.reelcounter.app
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import com.reelcounter.core.work.TrackingWork
+import com.reelcounter.core.common.AppInitializer
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -13,6 +13,10 @@ class ReelCounterApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    /** Start-up work contributed by modules (background schedules, the account data guard). */
+    @Inject
+    lateinit var initializers: Set<@JvmSuppressWildcards AppInitializer>
+
     // WorkManager is initialized on demand with Hilt's factory (the default initializer is
     // removed in the manifest), so workers can have injected dependencies.
     override val workManagerConfiguration: Configuration
@@ -20,6 +24,6 @@ class ReelCounterApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        TrackingWork.schedule(this)
+        initializers.forEach { it.initialize() }
     }
 }

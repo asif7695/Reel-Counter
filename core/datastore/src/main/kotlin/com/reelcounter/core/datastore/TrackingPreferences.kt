@@ -35,6 +35,9 @@ interface TrackingPreferencesStore {
     val preferences: Flow<TrackingPreferences>
     suspend fun acceptDisclosure(version: Int, atMs: Long)
     suspend fun setPaused(paused: Boolean, atMs: Long)
+
+    /** Forgets consent and pause, e.g. when another account takes over this device. */
+    suspend fun reset()
 }
 
 private val Context.trackingDataStore by preferencesDataStore(name = "tracking_preferences")
@@ -69,6 +72,10 @@ internal class DataStoreTrackingPreferencesStore @Inject constructor(
         }
     }
 
+    override suspend fun reset() {
+        context.trackingDataStore.edit { it.clear() }
+    }
+
     private companion object {
         val DISCLOSURE_VERSION = intPreferencesKey("disclosure_version")
         val DISCLOSURE_AT = longPreferencesKey("disclosure_accepted_at")
@@ -82,4 +89,7 @@ internal class DataStoreTrackingPreferencesStore @Inject constructor(
 internal abstract class DataStoreModule {
     @Binds
     abstract fun bindTrackingPreferencesStore(impl: DataStoreTrackingPreferencesStore): TrackingPreferencesStore
+
+    @Binds
+    abstract fun bindSyncPreferencesStore(impl: DataStoreSyncPreferencesStore): SyncPreferencesStore
 }

@@ -32,6 +32,9 @@ interface UsageSessionDao {
     /** On pause: provisional sessions end where they are and are never extended into the pause. */
     @Query("UPDATE usage_sessions SET is_open = 0 WHERE is_open = 1")
     suspend fun closeOpen()
+
+    @Query("DELETE FROM usage_sessions")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -51,6 +54,19 @@ interface DailyUsageDao {
     /** Freezes days before [date]; their usage events may already be gone, so they're never recomputed. */
     @Query("UPDATE daily_usage SET is_final = 1, dirty = 1, revision = :revision WHERE date < :date AND is_final = 0")
     suspend fun finalizeBefore(date: String, revision: Long)
+
+    @Query("SELECT * FROM daily_usage WHERE dirty = 1 AND sync_error IS NULL ORDER BY date, platform_id LIMIT :limit")
+    suspend fun dirty(limit: Int): List<DailyUsageEntity>
+
+    /** Only clears the flag if the row wasn't changed again while it was being uploaded. */
+    @Query("UPDATE daily_usage SET dirty = 0 WHERE date = :date AND platform_id = :platformId AND revision = :revision")
+    suspend fun markSynced(date: String, platformId: String, revision: Long)
+
+    @Query("UPDATE daily_usage SET sync_error = :error WHERE date = :date AND platform_id = :platformId AND revision = :revision")
+    suspend fun markRejected(date: String, platformId: String, revision: Long, error: String)
+
+    @Query("DELETE FROM daily_usage")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -63,6 +79,9 @@ interface DayCoverageDao {
 
     @Upsert
     suspend fun upsert(rows: List<DayCoverageEntity>)
+
+    @Query("DELETE FROM day_coverage")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -78,6 +97,9 @@ interface PlatformSettingsDao {
 
     @Upsert
     suspend fun upsert(row: PlatformSettingsEntity)
+
+    @Query("DELETE FROM platform_settings")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -106,4 +128,7 @@ interface IngestStateDao {
 
     @Upsert
     suspend fun upsert(state: IngestStateEntity)
+
+    @Query("DELETE FROM ingest_state")
+    suspend fun deleteAll()
 }

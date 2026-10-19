@@ -174,6 +174,23 @@ class UsageIngestorTest {
     }
 
     @Test
+    fun `revisions keep growing even if the clock is turned back`() = runTest {
+        use(tiktok, "2026-10-20T11:00", 5)
+        ingestor.ingest()
+        val first = assertNotNull(store.row(today, "tiktok")).revision
+
+        // The user sets the clock back half an hour and uses the app again; Android logs the new
+        // events with the earlier clock.
+        time.nowMs = at("2026-10-20T11:30")
+        use(tiktok, "2026-10-20T11:22", 5)
+        ingestor.ingest()
+
+        val row = assertNotNull(store.row(today, "tiktok"))
+        assertEquals(10 * minute, row.foregroundMs, "usage after the clock change is still read")
+        assertTrue(row.revision > first, "the server must see this as newer")
+    }
+
+    @Test
     fun `changing estimation settings recomputes recent days only`() = runTest {
         use(youtube, "2026-10-20T10:00", 20)
         ingestor.ingest()

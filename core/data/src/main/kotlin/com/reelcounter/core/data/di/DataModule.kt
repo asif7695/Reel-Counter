@@ -1,10 +1,13 @@
 package com.reelcounter.core.data.di
 
+import com.reelcounter.core.common.AppInitializer
 import com.reelcounter.core.data.auth.DataStorePasswordResetFlag
 import com.reelcounter.core.data.auth.DefaultAuthRepository
 import com.reelcounter.core.data.auth.PasswordResetFlag
 import com.reelcounter.core.data.profile.AndroidAvatarImageProcessor
 import com.reelcounter.core.data.profile.DefaultProfileRepository
+import com.reelcounter.core.data.sync.AccountDataGuard
+import com.reelcounter.core.data.sync.ActivitySyncer
 import com.reelcounter.core.data.tracking.DefaultPlatformSettingsRepository
 import com.reelcounter.core.data.tracking.DefaultTrackingRepository
 import com.reelcounter.core.data.tracking.RoomTrackingLocalStore
@@ -12,12 +15,14 @@ import com.reelcounter.core.data.tracking.TrackingLocalStore
 import com.reelcounter.core.domain.auth.AuthRepository
 import com.reelcounter.core.domain.profile.AvatarImageProcessor
 import com.reelcounter.core.domain.profile.ProfileRepository
+import com.reelcounter.core.domain.sync.ActivitySync
 import com.reelcounter.core.domain.tracking.PlatformSettingsRepository
 import com.reelcounter.core.domain.tracking.TrackingRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -43,4 +48,11 @@ internal abstract class DataModule {
 
     @Binds
     abstract fun bindTrackingLocalStore(impl: RoomTrackingLocalStore): TrackingLocalStore
+
+    @Binds
+    abstract fun bindActivitySync(impl: ActivitySyncer): ActivitySync
+
+    @Binds
+    @IntoSet
+    abstract fun bindAccountDataGuard(impl: AccountDataGuard): AppInitializer
 }

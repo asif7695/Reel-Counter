@@ -33,9 +33,12 @@ class FakeTrackingRepository(initialStatus: TrackingStatus = TrackingStatus.Need
         return RefreshResult.Updated
     }
 
+    /** NeedsUsageAccess for a first-time user; Active for someone who already granted it. */
+    var statusAfterDisclosure: TrackingStatus = TrackingStatus.NeedsUsageAccess
+
     override suspend fun acceptDisclosure(version: Int) {
         acceptedDisclosureVersion = version
-        statusFlow.value = TrackingStatus.NeedsUsageAccess
+        statusFlow.value = statusAfterDisclosure
     }
 
     override suspend fun setPaused(paused: Boolean) {

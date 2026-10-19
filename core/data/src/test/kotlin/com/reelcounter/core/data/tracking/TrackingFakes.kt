@@ -1,5 +1,7 @@
 package com.reelcounter.core.data.tracking
 
+import com.reelcounter.core.datastore.SyncPreferencesStore
+import com.reelcounter.core.datastore.SyncState
 import com.reelcounter.core.datastore.TrackingPreferences
 import com.reelcounter.core.datastore.TrackingPreferencesStore
 import com.reelcounter.core.domain.tracking.CURRENT_DISCLOSURE_VERSION
@@ -36,6 +38,37 @@ internal class FakeTrackingLocalStore : TrackingLocalStore {
     }
 
     override fun observeLastSuccess(): Flow<Long?> = lastSuccess
+
+    val rejected = mutableMapOf<RowVersion, String>()
+
+    override suspend fun nextRevision(nowMs: Long): Long {
+        val revision = maxOf(nowMs, (state?.lastRevision ?: 0L) + 1)
+        state = (state ?: IngestState(0, 0)).copy(lastRevision = revision)
+        return revision
+    }
+
+    override suspend fun dirtyRows(limit: Int) = rows.value.values
+        .filter { it.dirty && RowVersion(it.date, it.platformId, it.revision) !in rejected }
+        .sortedWith(compareBy({ it.date }, { it.platformId }))
+        .take(limit)
+
+    override suspend fun markSynced(versions: List<RowVersion>) {
+        rows.value = rows.value.mapValues { (_, row) ->
+            if (RowVersion(row.date, row.platformId, row.revision) in versions) row.copy(dirty = false) else row
+        }
+    }
+
+    override suspend fun markRejected(version: RowVersion, error: String) {
+        rejected[version] = error
+    }
+
+    override suspend fun clearForNewOwner() {
+        sessions.clear()
+        rows.value = emptyMap()
+        coverage.clear()
+        settings.value = emptyMap()
+        state = null
+    }
 
     override suspend fun earliestOpenSessionStart() = sessions.values.filter { it.isOpen }.minOfOrNull { it.startMs }
 
@@ -131,6 +164,32 @@ internal class FakeTrackingPreferences(
 
     override suspend fun setPaused(paused: Boolean, atMs: Long) {
         state.value = state.value.copy(paused = paused, resumedAtMs = if (paused) state.value.resumedAtMs else atMs)
+    }
+
+    override suspend fun reset() {
+        state.value = TrackingPreferences()
+    }
+}
+
+internal class FakeSyncPreferences(initial: SyncState = SyncState()) : SyncPreferencesStore {
+    val current = MutableStateFlow(initial)
+    override val state: Flow<SyncState> = current
+    private var counter = 0
+
+    override suspend fun adoptOwner(userId: String) {
+        current.value = current.value.copy(ownerUserId = userId, deviceId = current.value.deviceId ?: "device-${++counter}")
+    }
+
+    override suspend fun switchOwner(userId: String) {
+        current.value = SyncState(ownerUserId = userId, deviceId = "device-${++counter}", deviceRegistered = false)
+    }
+
+    override suspend fun setDeviceRegistered(registered: Boolean) {
+        current.value = current.value.copy(deviceRegistered = registered)
+    }
+
+    override suspend fun setLastSync(atMs: Long) {
+        current.value = current.value.copy(lastSyncMs = atMs)
     }
 }
 

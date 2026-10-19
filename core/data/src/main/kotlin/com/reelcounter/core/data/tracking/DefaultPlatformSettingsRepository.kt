@@ -1,5 +1,6 @@
 package com.reelcounter.core.data.tracking
 
+import com.reelcounter.core.domain.sync.SyncScheduler
 import com.reelcounter.core.domain.tracking.InstalledApps
 import com.reelcounter.core.domain.tracking.PlatformCatalog
 import com.reelcounter.core.domain.tracking.PlatformConfiguration
@@ -16,6 +17,7 @@ internal class DefaultPlatformSettingsRepository @Inject constructor(
     private val ingestor: UsageIngestor,
     private val installedApps: InstalledApps,
     private val time: TimeSource,
+    private val syncScheduler: SyncScheduler,
 ) : PlatformSettingsRepository {
 
     override val platforms: Flow<List<PlatformConfiguration>> = store.observePlatformSettings().map { rows ->
@@ -39,12 +41,17 @@ internal class DefaultPlatformSettingsRepository @Inject constructor(
 
     override suspend fun setEstimationEnabled(platformId: String, enabled: Boolean) {
         update(platformId) { it.copy(estimationEnabled = enabled) }
-        ingestor.recomputeEstimates()
+        recomputeAndSync()
     }
 
     override suspend fun setEstimationOverrides(platformId: String, shortFormShare: Double?, secondsPerReel: Double?) {
         update(platformId) { it.copy(shortFormShare = shortFormShare, secondsPerReel = secondsPerReel) }
+        recomputeAndSync()
+    }
+
+    private suspend fun recomputeAndSync() {
         ingestor.recomputeEstimates()
+        syncScheduler.requestSync()
     }
 
     private suspend fun update(platformId: String, change: (PlatformSettings) -> PlatformSettings) {
